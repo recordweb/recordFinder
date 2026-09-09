@@ -101,3 +101,4 @@ RecordFinder demonstriert das in [RWP](https://recordweb.github.io/rwp/) spezifi
 ## Lizenz
 
 [MIT](./LICENSE)
+
