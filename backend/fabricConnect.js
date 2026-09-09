@@ -23,12 +23,12 @@ const TLS_CERT_PATH = path.join(
   "tls",
   "ca.crt"
 );
-const ADMIN_MSP_DIR = path.join(CRYPTO_DIR, "users", `Admin@${ORG_DOMAIN}`, "msp");
-const CERT_PATH = path.join(
-  ADMIN_MSP_DIR,
-  "signcerts",
-  `Admin@${ORG_DOMAIN}-cert.pem`
-);
+const ADMIN_IDENTITY = process.env.ADMIN_IDENTITY || `Admin@${ORG_DOMAIN}`;
+const ADMIN_CERT_FILENAME = process.env.ADMIN_CERT_FILENAME || `${ADMIN_IDENTITY}-cert.pem`;
+
+const ADMIN_MSP_DIR = path.join(CRYPTO_DIR, "users", ADMIN_IDENTITY, "msp");
+const CERT_PATH = path.join(ADMIN_MSP_DIR, "signcerts", ADMIN_CERT_FILENAME);
+
 const KEY_DIR = path.join(ADMIN_MSP_DIR, "keystore");
 
 // Kleiner Cache, damit ein wiederholtes Aufloesen desselben Peers das
