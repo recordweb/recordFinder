@@ -16,7 +16,7 @@ const FETCH_TIMEOUT_MS = Number(process.env.FETCH_TIMEOUT_MS || 4000);
 
 const app = express();
 app.disable("x-powered-by");
-app.use(express.static(path.join(__dirname, "..", "frontend")));
+app.use(express.static(path.join(__dirname, "frontend")));
 app.use("/mock-resolver", mockResolver);
 
 // Liefert dem Frontend, welcher Peer aktuell als Default gilt und ob ein
