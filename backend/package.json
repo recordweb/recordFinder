@@ -1,0 +1,17 @@
+{
+  "name": "recordfinder",
+  "version": "1.0.0",
+  "description": "RecordFinder \u2013 RecordWeb-Vorzeige-App zum Aufloesen von did:rwp-Identifiern ueber das RootResolver-Netzwerk (Hyperledger Fabric).",
+  "type": "commonjs",
+  "main": "server.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@hyperledger/fabric-gateway": "^1.4.0",
+    "@grpc/grpc-js": "^1.10.0",
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0"
+  }
+}

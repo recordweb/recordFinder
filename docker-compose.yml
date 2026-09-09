@@ -1,0 +1,79 @@
+# =============================================================================
+# docker-compose.yml - recordfinder (standalone Compose project)
+# -----------------------------------------------------------------------------
+# Deliberately its own Compose project (own repo, own project name, own
+# primary network) - NOT folded into rw-rrn's or the PoC infra repo's
+# docker-compose.yml. This demonstrates that RecordFinder is an independent
+# deployable, consistent with "every client of the RootResolver network runs
+# its own instance, scoped to its own Fabric identity".
+#
+# Unlike rw-gnr-admin, RecordFinder deliberately does NOT join rw-rrn's
+# internal `fabric_net` Docker network. RecordFinder is meant to demonstrate
+# resolving a did:rwp identifier the way any external client would: it
+# reaches the Fabric peer's gRPC gateway over its public TLS endpoint
+# (PEER_ENDPOINT, e.g. peer0.tws.rwrrn.recordweb.dev:7051), the same address
+# a user could type into the app's own peer-selector (the small ▾ menu).
+# Joining `fabric_net` would only work for peers on this same VPS/stack and
+# would undermine that demonstration.
+#
+# It joins one EXTERNAL network owned by another stack, purely as a bridge,
+# without requiring changes to that stack's own compose file:
+#   - tws-proxy   (from the infra    - so the shared nginx reverse proxy
+#     repo running nginx)              (container `poc-nginx`) can reach
+#                                        this container by its Docker DNS
+#                                        hostname, without recordfinder ever
+#                                        joining that repo's internal
+#                                        `poc_network`.
+#
+# Both /opt/recordfinder and the infra repo running nginx are expected to
+# live under /opt/ on the same VPS, deployed via the same SSH user. rw-rrn
+# itself does not need to be co-located at all - RecordFinder only needs
+# network reachability to whichever peer's public endpoint is configured.
+#
+# Prerequisite (must already exist/be running before this project is
+# started, since `external: true` only attaches to an existing network
+# rather than creating it):
+#   - The infra repo's docker-compose.yml must define the external network
+#     `tws-proxy` and nginx must already be attached to it.
+#   - If RecordFinder is only ever reached directly (see `ports:` below),
+#     the tws-proxy network and bridge can be removed entirely.
+# =============================================================================
+
+name: recordfinder
+
+services:
+  recordfinder:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: recordfinder
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    volumes:
+      # Read-only mount of this organisation's own crypto material, matching
+      # the paths referenced by CRYPTO_DIR / PEER_HOST_ALIAS in .env. Adjust
+      # the host-side source path to wherever this organisation's
+      # crypto-config actually lives on the VPS.
+      - ${CRYPTO_CONFIG_HOST_PATH:-/opt/recordfinder/crypto-config}:/crypto:ro
+    # No host port published by default: reached exclusively via nginx
+    # (tws-proxy). Uncomment for direct host access, e.g. during debugging.
+    # ports:
+    #   - "3000:3000"
+    networks:
+      # Primary network: own, isolated, brought up by this project itself -
+      # demonstrates that RecordFinder does not depend on any other repo's
+      # compose file to exist, except via the explicit bridge below.
+      - recordfinder-net
+      # Bridge: joins the infra repo's existing nginx-facing network purely
+      # so nginx (container `poc-nginx`) can reach this container by its
+      # Docker DNS hostname (`recordfinder`) for proxy_pass. Deliberately
+      # NOT joining rw-rrn's `fabric_net` - see note above.
+      - tws-proxy
+
+networks:
+  recordfinder-net:
+    driver: bridge
+  tws-proxy:
+    external: true
+    name: tws-proxy

@@ -1,0 +1,195 @@
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+  color: #1a1a2e;
+  background: #fafafa;
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 28px 0 8px;
+}
+
+.brand h1 {
+  font-size: 1.4rem;
+  margin: 0;
+  display: inline;
+}
+
+.tagline {
+  margin-left: 10px;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* Bewusst unauffaellig gehalten: kein Label, kein Icon-Set - nur ein kleines
+   Dreieck, das die (selten benoetigte) Netzwerkeinstellung aufklappt. */
+.peer-toggle {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+.peer-toggle:hover {
+  color: #444;
+}
+.peer-toggle[aria-expanded="true"] {
+  transform: rotate(180deg);
+}
+
+.peer-panel {
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  background: #f5f5f7;
+}
+.peer-panel-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.peer-panel-actions button.secondary {
+  background: none;
+  border: 1px solid #ccc;
+  color: #555;
+}
+
+h2 {
+  font-size: 1.05rem;
+  margin: 0 0 10px;
+}
+
+.card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background: #fff;
+}
+
+.card.payload {
+  border-left: 4px solid #2b8a3e;
+}
+.card.payload.empty {
+  border-left-color: #e0a800;
+}
+.card.error {
+  border-left: 4px solid #c92a2a;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+  box-sizing: border-box;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  padding: 8px 16px;
+  cursor: pointer;
+  border: 1px solid #1a1a2e;
+  background: #1a1a2e;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.95em;
+}
+button:hover {
+  opacity: 0.9;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #666;
+}
+.muted {
+  color: #888;
+}
+
+.status {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #444;
+  word-break: break-all;
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  border: 1px solid #999;
+  background: #f5f5f7;
+}
+.badge.draft {
+  border-color: #e0a800;
+  background: #fff8e1;
+}
+.badge.finalized {
+  border-color: #2b8a3e;
+  background: #ebfbee;
+}
+
+.meta-table {
+  width: 100%;
+  font-size: 0.85rem;
+  border-collapse: collapse;
+}
+.meta-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+  word-break: break-all;
+}
+.meta-table td:first-child {
+  font-weight: 600;
+  width: 180px;
+  color: #444;
+}
+
+details.card summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+details.card[open] summary {
+  margin-bottom: 10px;
+}
+
+.step-label {
+  font-weight: 400;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-size: 0.8rem;
+  background: #f0f0f2;
+  padding: 8px;
+  border-radius: 4px;
+  margin: 6px 0 0;
+}
+
+footer {
+  margin-top: 30px;
+  text-align: center;
+}
+footer a {
+  color: #666;
+}
+
+.hidden {
+  display: none;
+}

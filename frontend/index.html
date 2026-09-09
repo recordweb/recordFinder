@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RecordFinder – RecordWeb</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>RecordFinder</h1>
+      <span class="tagline">RecordWeb Proof of Concept</span>
+    </div>
+    <button id="peerToggle" class="peer-toggle" title="Netzwerkeinstellungen" aria-expanded="false" aria-controls="peerPanel">▾</button>
+  </header>
+
+  <section id="peerPanel" class="peer-panel hidden">
+    <label for="peerInput" class="hint">Fabric-Peer-Adresse (host:port)</label>
+    <input id="peerInput" type="text" placeholder="peer0.tws.rwrrn.recordweb.dev:7051" autocomplete="off" spellcheck="false" />
+    <div class="peer-panel-actions">
+      <button id="peerSaveBtn" type="button">Übernehmen</button>
+      <button id="peerResetBtn" type="button" class="secondary">Zurücksetzen</button>
+    </div>
+    <p class="hint muted" id="peerCurrent"></p>
+  </section>
+
+  <main>
+    <p class="hint">
+      Gib eine <b>did:rwp</b>-ID ein. Die Blockchain findet automatisch den zuständigen
+      Resolver – egal welche Organisation den Record verwaltet.
+    </p>
+
+    <div class="card">
+      <label class="hint" for="didInput">did:rwp-Identifier</label>
+      <input id="didInput" value="did:rwp:a3f9e21c:xyz123" autocomplete="off" spellcheck="false" />
+      <button id="resolveBtn">Record finden</button>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div id="result" class="hidden"></div>
+  </main>
+
+  <footer>
+    <span class="hint muted">Teil von <a href="https://recordweb.github.io/rwp/" target="_blank" rel="noopener">RecordWeb</a> · Referenz-Client für das RootResolver-Netzwerk</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

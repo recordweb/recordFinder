@@ -1,0 +1,32 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/recordfinder
+
+            git fetch origin
+
+            # Root-eigene Dateien aus früheren Docker-Läufen entfernen (BEVOR git clean)
+            docker run --rm -v /opt/recordfinder:/workspace alpine:3.20 \
+              sh -c "rm -rf /workspace/node_modules"
+
+            git reset --hard origin/main
+            git clean -fd
+
+            docker compose up -d --build
