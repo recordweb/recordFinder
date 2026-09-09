@@ -32,7 +32,7 @@ function refreshPeerCurrentLabel() {
 
 async function loadConfig() {
   try {
-    const res = await fetch("/api/config");
+    const res = await fetch("api/config");
     const cfg = await res.json();
     defaultPeerEndpoint = cfg.defaultPeerEndpoint || "";
     allowClientPeerOverride = Boolean(cfg.allowClientPeerOverride);
@@ -255,7 +255,7 @@ async function resolveDid() {
     const peer = getStoredPeer();
     if (peer) params.set("peer", peer);
 
-    const res = await fetch(`/api/resolve?${params.toString()}`);
+    const res = await fetch(`api/resolve?${params.toString()}`);
     const data = await res.json();
     if (!res.ok) {
       statusEl.textContent = `Fehler: ${data.error || "HTTP " + res.status}`;
