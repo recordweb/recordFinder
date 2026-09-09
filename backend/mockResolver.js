@@ -24,7 +24,7 @@ router.get(/^\/rwp\/v2\/(.+)$/, (req, res) => {
       did,
       status: "not-found-in-mock",
       mock: true,
-      message: "Kein simulierter Record fuer diese DID hinterlegt.",
+      message: "No simulated record has been stored for this DID.",
     };
   res.json(record);
 });

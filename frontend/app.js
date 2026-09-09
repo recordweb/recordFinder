@@ -27,7 +27,7 @@ function setStoredPeer(value) {
 
 function refreshPeerCurrentLabel() {
   const active = getStoredPeer() || defaultPeerEndpoint;
-  peerCurrent.textContent = `Aktiv: ${active}`;
+  peerCurrent.textContent = `Active: ${active}`;
 }
 
 async function loadConfig() {

@@ -38,7 +38,7 @@ function isValidPeerEndpoint(value) {
 app.get("/api/resolve", async (req, res) => {
   const did = req.query.did;
   if (!did || !did.startsWith("did:rwp:")) {
-    return res.status(400).json({ error: "Ungueltige did:rwp-ID" });
+    return res.status(400).json({ error: "Invalid did:rwp-ID" });
   }
 
   const parts = did.split(":");
@@ -46,7 +46,7 @@ app.get("/api/resolve", async (req, res) => {
   if (!namespace) {
     return res
       .status(400)
-      .json({ error: "Namespace konnte nicht aus der DID extrahiert werden" });
+      .json({ error: "The namespace could not be extracted from the DID" });
   }
 
   let peerEndpoint = DEFAULT_PEER_ENDPOINT;
@@ -55,12 +55,12 @@ app.get("/api/resolve", async (req, res) => {
     if (!ALLOW_CLIENT_PEER_OVERRIDE) {
       return res
         .status(403)
-        .json({ error: "Der Betreiber dieser Instanz erlaubt keine Peer-Auswahl durch Clients." });
+        .json({ error: "The operator of this instance does not allow clients to select peers." });
     }
     if (!isValidPeerEndpoint(requestedPeer)) {
       return res
         .status(400)
-        .json({ error: "Ungueltige Peer-Adresse. Erwartet wird host:port, z. B. peer0.example.org:7051" });
+        .json({ error: "Invalid peer address. The format must be host:port, e.g., peer0.example.org:7051" });
     }
     peerEndpoint = requestedPeer.trim();
   }
@@ -96,12 +96,12 @@ app.get("/api/resolve", async (req, res) => {
           fullRecord = await recordRes.json();
         } else {
           fullRecord = {
-            error: `Record konnte nicht geladen werden (HTTP ${recordRes.status})`,
+            error: `Unable to load the record (HTTP ${recordRes.status})`,
             status: recordRes.status,
           };
         }
       } catch (err) {
-        fullRecord = { error: "Record konnte nicht geladen werden: " + err.message };
+        fullRecord = { error: "Unable to load the record: " + err.message };
       }
     }
 
@@ -117,12 +117,12 @@ app.get("/api/resolve", async (req, res) => {
       fullRecord,
     });
   } catch (err) {
-    console.error("Aufloesung fehlgeschlagen:", err);
+    console.error("Resolution failed:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`RecordFinder laeuft auf http://localhost:${PORT}`);
+  console.log(`RecordFinder runs on http://localhost:${PORT}`);
   console.log(`Standard-Peer: ${DEFAULT_PEER_ENDPOINT}`);
 });

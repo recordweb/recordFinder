@@ -1,7 +1,7 @@
 {
   "name": "recordfinder",
   "version": "1.0.0",
-  "description": "RecordFinder \u2013 RecordWeb-Vorzeige-App zum Aufloesen von did:rwp-Identifiern ueber das RootResolver-Netzwerk (Hyperledger Fabric).",
+  "description": "RecordFinder \u2013 RecordWeb app for resolving did:rwp identifiers via the Global Namespace Registry.",
   "type": "commonjs",
   "main": "server.js",
   "license": "MIT",
