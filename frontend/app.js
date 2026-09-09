@@ -54,21 +54,21 @@ peerToggle.addEventListener("click", () => {
 peerSaveBtn.addEventListener("click", () => {
   const value = peerInput.value.trim();
   if (value && !/^[a-zA-Z0-9.-]+:[0-9]{2,5}$/.test(value)) {
-    statusEl.textContent = "Ungueltige Peer-Adresse. Format: host:port (z. B. peer0.example.org:7051)";
+    statusEl.textContent = "Invalid Peer-Address. Format: host:port (eg. peer0.example.org:7051)";
     return;
   }
   setStoredPeer(value);
   refreshPeerCurrentLabel();
   statusEl.textContent = value
-    ? `Peer-Adresse gespeichert: ${value}`
-    : "Peer-Adresse zurueckgesetzt auf Server-Standard.";
+    ? `Peer-Addresse saved: ${value}`
+    : "Peer-Addresse reset to server-standard.";
 });
 
 peerResetBtn.addEventListener("click", () => {
   setStoredPeer("");
   peerInput.value = "";
   refreshPeerCurrentLabel();
-  statusEl.textContent = "Peer-Adresse zurueckgesetzt auf Server-Standard.";
+  statusEl.textContent = "Peer-Addresse reset to server-standard.";
 });
 
 function esc(value) {
@@ -107,14 +107,14 @@ function renderTable(entries) {
   // Leere Felder werden weggelassen, damit unvollstaendige Dokumente kein
   // halbleeres Tabellengerueste erzeugen.
   const rows = entries.filter(([, value]) => !isBlank(value));
-  if (!rows.length) return `<p class="muted">Keine Angaben vorhanden.</p>`;
+  if (!rows.length) return `<p class="muted">No information available.</p>`;
   return `<table class="meta-table">${rows
     .map(([label, value]) => `<tr><td>${esc(label)}</td><td>${fmtValue(value)}</td></tr>`)
     .join("")}</table>`;
 }
 
 function renderJson(value) {
-  if (isBlank(value)) return `<p class="muted">Keine Daten vorhanden.</p>`;
+  if (isBlank(value)) return `<p class="muted">No data available.</p>`;
   return jsonBlock(value);
 }
 
@@ -126,11 +126,11 @@ function accordion(title, subtitle, body) {
 
 function payloadNotice(record, didDocument) {
   if (record && record.status === 403)
-    return "Kein Payload vorhanden – der Record ist nicht finalisiert (Draft) und daher nicht öffentlich lesbar.";
+    return "No payload available, the record has possibly not been finalized (draft) and is therefore not publicly viewable.";
   if (record && record.error) return record.error;
   if (!didDocument.recordEndpoint)
-    return "Kein Payload vorhanden – das DID-Dokument verweist auf keinen Record-Endpoint.";
-  return "Kein Payload vorhanden (Draft).";
+    return "No payload available, the DID document does not reference a record endpoint.";
+  return "No payload available (draft).";
 }
 
 function renderPayloadCard(data) {
@@ -174,8 +174,8 @@ function renderMetadata(data) {
   const rec = recordFields(data.fullRecord);
   const didDocument = data.didDocument;
   return accordion(
-    "Technische Metadaten",
-    "alle übrigen Felder",
+    "Technical Metadaten",
+    "all remaining fields",
     renderTable([
       ["@context", didDocument["@context"]],
       ["controller", didDocument.controller],
@@ -195,10 +195,10 @@ function renderMetadata(data) {
 
 function renderTrail(data) {
   const chaincode = data.chaincodeResult;
-  return `<h2>Auflösungsweg</h2>
+  return `<h2>Resolver Path</h2>
     ${accordion(
       "1. inputDid",
-      "Eingabe des Nutzers",
+      "User Input",
       renderTable([
         ["inputDid", data.inputDid],
         ["extractedNamespace", data.extractedNamespace],
@@ -206,7 +206,7 @@ function renderTrail(data) {
       ])
     )}
     ${accordion(
-      "2. Root-Resolver-Chaincode",
+      "2. Global Namespace Registry",
       "namespace-registry / ResolveNamespace",
       renderTable([
         ["namespace", chaincode.namespace],
@@ -219,17 +219,17 @@ function renderTrail(data) {
     )}
     ${accordion(
       "3. resolverEndpointCalled",
-      "DID-Dokument abrufen",
+      "DID-Document retrieve",
       renderTable([
         ["resolverEndpointCalled", data.resolverEndpointCalled],
         ["resolverSource", data.resolverSource],
-      ]) + `<p class="hint">Antwort (DID-Dokument):</p>${renderJson(data.didDocument)}`
+      ]) + `<p class="hint">Response (DID-Document):</p>${renderJson(data.didDocument)}`
     )}
     ${accordion(
       "4. recordEndpointCalled",
-      "Record abrufen",
+      "Record retrieve",
       renderTable([["recordEndpointCalled", data.recordEndpointCalled]]) +
-        `<p class="hint">Antwort (Record):</p>${renderJson(data.fullRecord)}`
+        `<p class="hint">Response (Record):</p>${renderJson(data.fullRecord)}`
     )}`;
 }
 
@@ -237,7 +237,7 @@ function renderResult(data) {
   const doc = data.didDocument;
   const head = didUnknown(doc)
     ? `<div class="card error">
-        <h2>DID beim Resolver unbekannt</h2>
+        <h2>DID unknownw at the resolver</h2>
         <p>${esc(doc.message || doc.error)}</p>
       </div>`
     : renderPayloadCard(data) + renderDetailsCard(data);
@@ -247,7 +247,7 @@ function renderResult(data) {
 }
 
 async function resolveDid() {
-  statusEl.textContent = "Suche über Blockchain …";
+  statusEl.textContent = "Search in Global Namespace Registry …";
   resultEl.classList.add("hidden");
   try {
     const did = didInput.value.trim();
@@ -258,14 +258,14 @@ async function resolveDid() {
     const res = await fetch(`api/resolve?${params.toString()}`);
     const data = await res.json();
     if (!res.ok) {
-      statusEl.textContent = `Fehler: ${data.error || "HTTP " + res.status}`;
+      statusEl.textContent = `Error: ${data.error || "HTTP " + res.status}`;
       return;
     }
     const doc = data.didDocument || {};
     statusEl.textContent = `Namespace ${data.extractedNamespace} → ${data.resolverEndpointCalled}`;
     renderResult(data);
   } catch (err) {
-    statusEl.textContent = "Fehler: " + err.message;
+    statusEl.textContent = "Error: " + err.message;
   }
 }
 

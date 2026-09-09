@@ -1,104 +1,138 @@
 # RecordFinder
 
-**RecordFinder** ist eine Referenz-Client-App für [RecordWeb](https://recordweb.github.io/rwp/): Sie löst einen `did:rwp`-Identifier vollständig über das dezentrale **RootResolver-Netzwerk** auf und zeigt jeden einzelnen Schritt dieser Auflösung transparent an.
+**RecordFinder** is a reference client application for [RecordWeb](https://recordweb.github.io/rwp/): it resolves a `did:rwp` identifier end to end through the decentralised **RootResolver network** and makes every single step of that resolution transparent.
 
-Die App verbindet sich dazu direkt (über [Hyperledger Fabric Gateway](https://hyperledger.github.io/fabric-gateway/)) mit einem Peer des RootResolver-Netzwerks, ruft die `namespace-registry`-Chaincode auf, folgt dem zurückgegebenen Resolver-Endpoint und lädt anschließend das DID-Dokument sowie den zugehörigen Record.
+The app connects directly (via the [Hyperledger Fabric Gateway](https://hyperledger.github.io/fabric-gateway/)) to a peer of the RootResolver network, invokes the `namespace-registry` chaincode, follows the returned resolver endpoint, and then loads the DID document and its associated record.
 
-## Was RecordFinder zeigt
+## What RecordFinder shows
 
-Für eine eingegebene DID (z. B. `did:rwp:a3f9e21c:xyz123`) durchläuft RecordFinder vier Schritte und macht jeden davon einzeln nachvollziehbar:
+For an input DID (e.g. `did:rwp:a3f9e21c:xyz123`), RecordFinder walks through four steps and makes each one individually inspectable:
 
-1. **Eingabe** – Namespace wird aus der DID extrahiert.
-2. **Root-Resolver-Chaincode** – `ResolveNamespace(namespace)` wird gegen die Blockchain ausgeführt; die Antwort enthält u. a. den zuständigen `resolverEndpoint`, `registeredBy`, `txId` und die Endorsements.
-3. **DID-Dokument abrufen** – der zurückgemeldete Resolver wird per HTTP abgefragt.
-4. **Record abrufen** – falls das DID-Dokument einen `recordEndpoint` enthält, wird der eigentliche Record geladen und dessen Payload sowie Metadaten dargestellt.
+1. **Input** – the namespace is extracted from the DID.
+2. **Root-resolver chaincode** – `ResolveNamespace(namespace)` is executed against the blockchain; the response includes the responsible `resolverEndpoint`, `registeredBy`, `txId`, and the endorsements.
+3. **Fetch DID document** – the returned resolver is queried over HTTP.
+4. **Fetch record** – if the DID document contains a `recordEndpoint`, the actual record is loaded and its payload and metadata are rendered.
 
-Jeder Schritt ist als aufklappbares Element sichtbar, inklusive der jeweiligen Rohantwort als JSON – so bleibt nachvollziehbar, welche Organisation welchen Teil der Auflösung verantwortet, ganz im Sinn des RootResolver-Modells (kein zentraler Single Point of Trust).
+Each step is shown as a collapsible element, including the raw JSON response — so it stays traceable which organisation is responsible for which part of the resolution, in line with the RootResolver model (no central single point of trust).
 
-## Peer-Adresse ändern
+## Changing the peer address
 
-Der einzige Netzwerkparameter, der fachlich variieren darf, ist die Adresse des **Fabric-Peers**, gegen den die App die `ResolveNamespace`-Anfrage stellt. Alles andere (Channel, Chaincode, Fabric-Identität) ist durch das RootResolver-Netzwerk fest vorgegeben und wird nicht über das Frontend verändert.
+The only network parameter that is meant to vary is the address of the **Fabric peer** the app targets for the `ResolveNamespace` call. Everything else (channel, chaincode, Fabric identity) is fixed by the RootResolver network itself and cannot be changed from the frontend.
 
-Ein kleines Dreieck (▾) oben rechts neben dem Titel öffnet ein unauffälliges Panel, in dem sich diese Peer-Adresse im Format `host:port` setzen lässt, zum Beispiel:
+A small triangle (▾) at the top right, next to the title, opens an unobtrusive panel where this peer address can be set in `host:port` format, for example:
 
 ```
 peer0.tws.rwrrn.recordweb.dev:7051
 ```
 
-Die Eingabe wird im Browser (`localStorage`) gespeichert und bei jeder Anfrage an den Server mitgegeben. Der Server validiert das Format serverseitig und fällt ohne Eingabe auf den konfigurierten Standard-Peer zurück. Über die Umgebungsvariable `ALLOW_CLIENT_PEER_OVERRIDE=false` kann ein Betreiber diese Möglichkeit auch vollständig deaktivieren und die Peer-Adresse fest verdrahten.
+The value is stored in the browser (`localStorage`) and sent along with every request to the server. The server validates the format and falls back to the configured default peer if nothing is entered. An operator can disable client-side peer selection entirely via `ALLOW_CLIENT_PEER_OVERRIDE=false` and hard-wire the peer address instead.
 
-## Architektur
+## Architecture
 
 ```
 Browser (frontend/)
-   │  GET /api/resolve?did=...&peer=...
+   │  GET api/resolve?did=...&peer=...
    ▼
-server.js  ──▶ fabricConnect.js ──▶ Fabric-Peer (gRPC/mTLS) ──▶ namespace-registry Chaincode
+server.js  ──▶ fabricConnect.js ──▶ Fabric peer (gRPC/mTLS) ──▶ namespace-registry chaincode
    │
-   ├─▶ Resolver-Endpoint (HTTP)  ──▶ DID-Dokument
-   └─▶ Record-Endpoint (HTTP)    ──▶ Record inkl. Payload
+   ├─▶ Resolver endpoint (HTTP)  ──▶ DID document
+   └─▶ Record endpoint (HTTP)    ──▶ Record incl. payload
 ```
 
-- **`server.js`** – Express-Server, orchestriert die vier Auflösungsschritte, validiert Eingaben (DID-Syntax, Peer-Adressformat) und liefert das statische Frontend aus.
-- **`fabricConnect.js`** – Fabric-Gateway-Client; baut pro Anfrage eine TLS-gesicherte gRPC-Verbindung zum gewählten Peer auf und ruft `ResolveNamespace` auf dem Channel des RootResolver-Netzwerks auf.
-- **`mockResolver.js`** – Lokaler Fallback-Resolver für Demos ohne Netzwerkzugriff; liefert ausschließlich Beispiel-Records und wird nie anstelle eines funktionierenden Live-Resolvers verwendet.
-- **`frontend/`** – Statisches Frontend (HTML/CSS/Vanilla-JS), rendert Auflösungsweg, Record-Details und Payload.
+The repository is split into two top-level directories, `backend/` and `frontend/`, each independently deployable in principle but shipped together as a single container in this reference build:
 
-## Voraussetzungen
+- **`backend/server.js`** – Express server; orchestrates the four resolution steps, validates input (DID syntax, peer address format), and serves the static frontend.
+- **`backend/fabricConnect.js`** – Fabric Gateway client; builds a TLS-secured gRPC connection to the selected peer per request and invokes `ResolveNamespace` on the RootResolver network's channel.
+- **`backend/mockResolver.js`** – Local fallback resolver for demos without network access; only ever returns example records and is never used in place of a working live resolver.
+- **`frontend/`** – Static frontend (HTML/CSS/vanilla JS); renders the resolution trail, record details, and payload. Uses relative fetch paths (`api/...`, no leading slash) so the app works correctly regardless of which URL prefix it is deployed under.
 
-- Zugriff auf einen Peer eines RootResolver-Netzwerks (z. B. das TWS-Testnetz, siehe [RootResolver Network Operating Handbook](https://github.com/recordweb)) sowie eine gültige Fabric-Identität (Zertifikat + privater Schlüssel) mit Leserecht auf den jeweiligen Channel.
-- Das MSP-/TLS-Kryptomaterial dieser Identität, lokal oder als Volume verfügbar.
-- Node.js 20+, falls ohne Docker betrieben.
+Note that `server.js` serves the frontend via `express.static(path.join(__dirname, "frontend"))`, which assumes the Docker image places `frontend/` as a sibling of `server.js` inside `/app` (see [`backend/Dockerfile`](./backend/Dockerfile)) — not one level above it.
 
-## Konfiguration
+## Prerequisites
 
-Alle Werte werden über Umgebungsvariablen gesetzt, siehe [`.env.example`](./.env.example):
+- Access to a peer of a RootResolver network (e.g. the TWS test network; see the [RootResolver Network Operating Handbook](https://github.com/recordweb)) and a valid Fabric identity (certificate + private key) with read access to the relevant channel.
+- The MSP/TLS crypto material for that identity, available locally or mounted as a volume.
+- Node.js 20+ if running without Docker.
 
-| Variable | Bedeutung | Default |
+## Configuration
+
+All values are set via environment variables. Two separate `.env` files are involved, each with a distinct purpose — this distinction matters and is easy to get wrong:
+
+- **`.env`** (repository root, next to `docker-compose.yml`) — read only by Docker Compose itself, to interpolate `${...}` placeholders in `docker-compose.yml` (currently just the crypto-material host path). Variables placed only in `backend/.env` are **not** visible at this stage, since Compose parses `docker-compose.yml` — including all `volumes:` entries — before the container's own `env_file` is ever applied.
+- **`backend/.env`** (see [`backend/.env.example`](./backend/.env.example)) — read by the Node.js application at runtime via `env_file:` in `docker-compose.yml`. This is where the Fabric identity, channel, chaincode, and default peer are configured.
+
+`.env` (repository root):
+
+| Variable | Meaning | Default |
 |---|---|---|
-| `PORT` | HTTP-Port der App | `3000` |
-| `CRYPTO_DIR` | Basisverzeichnis des MSP-/TLS-Kryptomaterials | `/crypto/peerOrganizations/org.recordweb.dev` |
-| `MSP_ID` | MSP-ID der eigenen Fabric-Identität | `TWSOrgMSP` |
-| `ORG_DOMAIN` | Organisations-Domain, unter der die Admin-Identität abgelegt ist | `org.recordweb.dev` |
-| `CHANNEL_NAME` | Fabric-Channel des RootResolver-Netzwerks | `rw-gnr-test` |
-| `CHAINCODE_NAME` | Name der Namespace-Registry-Chaincode | `namespace-registry` |
-| `PEER_ENDPOINT` | Standard-Peer-Adresse (`host:port`) | `peer0.tws.rwrrn.recordweb.dev:7051` |
-| `PEER_HOST_ALIAS` | TLS-SAN-Hostname des Standard-Peers | `peer0.tws.rwrrn.recordweb.dev` |
-| `ALLOW_CLIENT_PEER_OVERRIDE` | Erlaubt Peer-Wahl über das Frontend | `true` |
-| `FETCH_TIMEOUT_MS` | Timeout für HTTP-Aufrufe an Resolver/Record-Endpoints | `4000` |
+| `CRYPTO_CONFIG_HOST_PATH` | Host path to the crypto material to bind-mount read-only into the container at `/crypto` | `/opt/recordfinder/crypto-config` |
 
-> Die produktive Peer-Adresse hängt vom jeweiligen Netzwerk-Stage ab (siehe RootResolver Network Operating Handbook, Stage 1–4). Für das aktuelle TWS-Testnetz gilt der oben genannte Default; bei einer Erweiterung des Netzwerks um weitere Organisationen kann über das Dreieck-Panel gezielt gegen den Peer einer anderen Organisation getestet werden.
+`backend/.env`:
 
-## Lokale Ausführung
+| Variable | Meaning | Default |
+|---|---|---|
+| `PORT` | HTTP port of the app | `3000` |
+| `CRYPTO_DIR` | Base directory of the MSP/TLS crypto material **inside the container** (must start with `/crypto`, matching the Compose volume target) | `/crypto/peerOrganizations/org.recordweb.dev` |
+| `MSP_ID` | MSP ID of the own Fabric identity | `TWSOrgMSP` |
+| `ORG_DOMAIN` | Organisation domain used to derive the default admin identity name | `org.recordweb.dev` |
+| `ADMIN_IDENTITY` | Name of the admin identity as registered/enrolled with the Fabric CA (defaults to the cryptogen-style `Admin@<ORG_DOMAIN>`; live-CA networks typically use a custom name, e.g. `tws-org-admin`) | `Admin@${ORG_DOMAIN}` |
+| `ADMIN_CERT_FILENAME` | Filename of the signing certificate under `users/<ADMIN_IDENTITY>/msp/signcerts/` (`fabric-ca-client enroll` typically produces a plain `cert.pem`, not the cryptogen-style `Admin@...-cert.pem`) | `${ADMIN_IDENTITY}-cert.pem` |
+| `CHANNEL_NAME` | Fabric channel of the RootResolver network | `rw-gnr-test` |
+| `CHAINCODE_NAME` | Name of the namespace-registry chaincode | `namespace-registry` |
+| `PEER_ENDPOINT` | Default peer address (`host:port`) | `peer0.tws.rwrrn.recordweb.dev:7051` |
+| `PEER_HOST_ALIAS` | TLS SAN hostname of the default peer | `peer0.tws.rwrrn.recordweb.dev` |
+| `ALLOW_CLIENT_PEER_OVERRIDE` | Allows peer selection from the frontend | `true` |
+| `FETCH_TIMEOUT_MS` | Timeout for HTTP calls to resolver/record endpoints | `4000` |
+
+> The production peer address depends on the network stage in question (see RootResolver Network Operating Handbook, Stages 1–4). For the current TWS test network, the default above applies; once the network grows to include more organisations, the triangle panel lets you test against a specific organisation's peer directly.
+>
+> `ADMIN_IDENTITY` and `ADMIN_CERT_FILENAME` exist because networks bootstrapped via a **live Fabric CA** (`fabric-ca-client register`/`enroll`, see the RootResolver Network Operating Handbook, Decision D2) let each organisation choose its own admin identity name and produce a plain `cert.pem`, unlike the fixed `Admin@<org-domain>` / `Admin@<org-domain>-cert.pem` naming that tools like `cryptogen` generate. Set both explicitly if your network was bootstrapped this way.
+
+## Running locally
 
 ```bash
 cd backend
 npm install
-cp .env.example .env   # Werte anpassen
+cp .env.example .env   # adjust values
 node server.js
 ```
 
-Die App ist danach unter `http://localhost:3000` erreichbar.
+The app is then reachable at `http://localhost:3000`.
 
-## Betrieb mit Docker
+## Running with Docker
 
 ```bash
+cp .env.example .env       # repository root: set CRYPTO_CONFIG_HOST_PATH
+cd backend && cp .env.example .env && cd ..   # backend: set Fabric identity/channel/peer
 docker compose up -d --build
 ```
 
-`docker-compose.yml` mountet das Kryptomaterial read-only unter `/crypto` in den Container – passe den lokalen Pfad in der Datei an dein Setup an. Die Auslieferung auf einen VPS erfolgt automatisiert über [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml) (SSH-Deploy bei Push auf `main`), sofern die Secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` und `DEPLOY_PATH` im Repository hinterlegt sind.
+`docker-compose.yml` mounts the crypto material read-only into the container at `/crypto`, sourced from the host path configured via `CRYPTO_CONFIG_HOST_PATH` in the root `.env` — adjust that path to wherever your organisation's `crypto-config` actually lives on the host. It also joins the external `tws-proxy` Docker network so a shared nginx reverse proxy can reach the container by its Docker DNS name (`recordfinder`), without RecordFinder joining the RootResolver network's own internal Docker network — RecordFinder deliberately reaches its peer only over the peer's public TLS endpoint, the same way any external client would.
 
-## Sicherheitshinweise
+Deployment to a VPS is automated via [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml) (SSH deploy on push to `main`), provided the secrets `VPS_HOST`, `VPS_USER`, and `VPS_SSH_KEY` are configured in the repository and the target path `/opt/recordfinder` exists on the VPS with a checked-out copy of this repository.
 
-- Die App führt ausschließlich lesende Operationen aus (`evaluateTransaction`, keine `submitTransaction`); sie kann keine Namespace-Registrierungen verändern.
-- Nur die Peer-**Netzwerkadresse** ist client-seitig wählbar – Fabric-Identität, MSP, Channel und Chaincode bleiben serverseitig fix und sind nicht über die UI beeinflussbar.
-- Kryptomaterial (private Schlüssel, Admin-Zertifikate) wird nie an das Frontend ausgeliefert und sollte auf dem Host mit restriktiven Dateiberechtigungen bzw. einem Secrets-Manager geschützt werden.
+### Reverse-proxy note
 
-## Bezug zu RecordWeb
+If RecordFinder is served under a path prefix (e.g. `https://example.org/recordfinder/`) via a shared reverse proxy, no special `/api/` proxy rule is needed: the frontend calls `api/config` and `api/resolve` using **relative** paths (no leading slash), so they resolve correctly under any prefix as long as the proxy forwards the whole `/recordfinder/` subtree to the container, e.g.:
 
-RecordFinder demonstriert das in [RWP](https://recordweb.github.io/rwp/) spezifizierte namensraumübergreifende Resolver-Modell: Die Blockchain speichert ausschließlich Routing-Informationen (`namespace → resolverEndpoint`), niemals DID-Dokumente oder Records selbst. Details zum Netzwerkaufbau, zur Governance und zum Rollout-Plan des RootResolver-Netzwerks finden sich im [RootResolver Network Operating Handbook](https://github.com/recordweb) der RecordWeb-Organisation.
+```nginx
+location /recordfinder/ {
+    proxy_pass http://recordfinder:3000/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+```
 
-## Lizenz
+## Security notes
+
+- The app performs read-only operations exclusively (`evaluateTransaction`, never `submitTransaction`); it cannot modify namespace registrations.
+- Only the peer's **network address** is client-selectable — Fabric identity, MSP, channel, and chaincode remain fixed server-side and cannot be influenced through the UI.
+- Crypto material (private keys, admin certificates) is never served to the frontend and should be protected on the host with restrictive file permissions or a secrets manager.
+
+## Relation to RecordWeb
+
+RecordFinder demonstrates the cross-namespace resolver model specified in [RWP](https://recordweb.github.io/rwp/): the blockchain stores only routing information (`namespace → resolverEndpoint`), never DID documents or records themselves. Details on network setup, governance, and the rollout plan for the RootResolver network are available in the [RootResolver Network Operating Handbook](https://github.com/recordweb) maintained by the RecordWeb organisation.
+
+## License
 
 [MIT](./LICENSE)
-
