@@ -12,15 +12,15 @@
       <h1>RecordFinder</h1>
       <span class="tagline">@ RecordWeb Global-Namespace-Registry</span>
     </div>
-    <fieldset class="network-switch" id="networkSwitch">
-      <legend class="sr-only">Network</legend>
-      <label><input type="radio" name="network" value="test" checked /> Testnet</label>
-      <label><input type="radio" name="network" value="prod" /> Production</label>
-    </fieldset>
     <button id="peerToggle" class="peer-toggle" title="Netzwerkeinstellungen" aria-expanded="false" aria-controls="peerPanel">▾</button>
   </header>
 
   <section id="peerPanel" class="peer-panel hidden">
+    <fieldset class="network-switch" id="networkSwitch">
+      <legend class="hint">Network</legend>
+      <label><input type="radio" name="network" value="test" checked /> Testnet</label>
+      <label><input type="radio" name="network" value="prod" /> Production</label>
+    </fieldset>
     <label for="peerInput" class="hint">Fabric-Peer-Address (host:port)</label>
     <input id="peerInput" type="text" placeholder="peer0.tws.rwrrn.recordweb.dev:7051" autocomplete="off" spellcheck="false" />
     <div class="peer-panel-actions">
