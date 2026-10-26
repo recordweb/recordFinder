@@ -12,9 +12,12 @@ const peerInput = document.getElementById("peerInput");
 const peerSaveBtn = document.getElementById("peerSaveBtn");
 const peerResetBtn = document.getElementById("peerResetBtn");
 const peerCurrent = document.getElementById("peerCurrent");
-
 let defaultPeerEndpoint = "";
 let allowClientPeerOverride = true;
+
+const NETWORK_KEY = "recordfinder.network";
+const networkSwitch = document.getElementById("networkSwitch");
+let defaultNetwork = "test";
 
 function getStoredPeer() {
   return localStorage.getItem(STORAGE_KEY) || "";
@@ -30,12 +33,24 @@ function refreshPeerCurrentLabel() {
   peerCurrent.textContent = `Active: ${active}`;
 }
 
+function getNetwork() {
+  return sessionStorage.getItem(NETWORK_KEY) || "";
+}
+function applyNetworkToRadios(value) {
+  const input = networkSwitch.querySelector(`input[value="${value}"]`);
+  if (input) input.checked = true;
+}
+networkSwitch.addEventListener("change", (e) => {
+  if (e.target.name === "network") sessionStorage.setItem(NETWORK_KEY, e.target.value);
+});
+
 async function loadConfig() {
   try {
     const res = await fetch("api/config");
     const cfg = await res.json();
     defaultPeerEndpoint = cfg.defaultPeerEndpoint || "";
     allowClientPeerOverride = Boolean(cfg.allowClientPeerOverride);
+    defaultNetwork = cfg.defaultNetwork || "test";
   } catch (err) {
     // Faellt auf ein leeres Standardfeld zurueck; der Server validiert ohnehin.
   }
@@ -44,6 +59,7 @@ async function loadConfig() {
   peerInput.disabled = !allowClientPeerOverride;
   peerSaveBtn.disabled = !allowClientPeerOverride;
   refreshPeerCurrentLabel();
+  applyNetworkToRadios(sessionStorage.getItem(NETWORK_KEY) || defaultNetwork);
 }
 
 peerToggle.addEventListener("click", () => {
@@ -202,6 +218,7 @@ function renderTrail(data) {
       renderTable([
         ["inputDid", data.inputDid],
         ["extractedNamespace", data.extractedNamespace],
+        ["networkUsed", data.networkUsed],
         ["peerEndpointUsed", data.peerEndpointUsed],
       ])
     )}
@@ -254,6 +271,7 @@ async function resolveDid() {
     const params = new URLSearchParams({ did });
     const peer = getStoredPeer();
     if (peer) params.set("peer", peer);
+    params.set("network", getNetwork());
 
     const res = await fetch(`api/resolve?${params.toString()}`);
     const data = await res.json();

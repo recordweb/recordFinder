@@ -12,7 +12,20 @@ const CRYPTO_DIR =
 const MSP_ID = process.env.MSP_ID || "TWSOrgMSP";
 const PEER_HOST_ALIAS =
   process.env.PEER_HOST_ALIAS || "peer0.tws.rwrrn.recordweb.dev";
-const CHANNEL_NAME = process.env.CHANNEL_NAME || "rw-gnr-test";
+const CHANNELS = {
+  test: process.env.CHANNEL_NAME_TEST || process.env.CHANNEL_NAME || "rw-gnr-test",
+  prod: process.env.CHANNEL_NAME_PROD || "rw-gnr",
+};
+const DEFAULT_NETWORK = Object.prototype.hasOwnProperty.call(CHANNELS, process.env.DEFAULT_NETWORK)
+  ? process.env.DEFAULT_NETWORK
+  : "test";
+
+// Allow-List: gibt den Schlüssel zurück oder null bei ungültigem Wert.
+function resolveNetworkKey(value) {
+  if (value === undefined || value === "") return DEFAULT_NETWORK;
+  return Object.prototype.hasOwnProperty.call(CHANNELS, value) ? value : null;
+}
+
 const CHAINCODE_NAME = process.env.CHAINCODE_NAME || "namespace-registry";
 const ORG_DOMAIN = process.env.ORG_DOMAIN || "org.recordweb.dev";
 
@@ -85,7 +98,7 @@ async function getGateway(peerEndpoint) {
 async function resolveNamespace(namespace, options = {}) {
   const { gateway, client } = await getGateway(options.peerEndpoint);
   try {
-    const network = gateway.getNetwork(CHANNEL_NAME);
+    const network = gateway.getNetwork(CHANNELS[options.network || DEFAULT_NETWORK]);
     const contract = network.getContract(CHAINCODE_NAME);
     const resultBytes = await contract.evaluateTransaction(
       "ResolveNamespace",
@@ -99,4 +112,4 @@ async function resolveNamespace(namespace, options = {}) {
   }
 }
 
-module.exports = { resolveNamespace };
+module.exports = { resolveNamespace, resolveNetworkKey, DEFAULT_NETWORK };

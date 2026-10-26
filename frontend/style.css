@@ -193,3 +193,46 @@ footer a {
 .hidden {
   display: none;
 }
+
+/* Network switch (radio buttons) */
+.network-switch {
+  display: flex;
+  gap: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.2rem;
+  margin: 0;
+}
+.network-option {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.network-option:has(input:checked) {
+  background: var(--primary);
+  color: #fff;
+}
+.network-option-restricted {
+  position: relative;
+}
+.network-option-restricted::after {
+  content: "⚠";
+  margin-left: 0.25rem;
+  color: var(--warn-fg);
+}
+.network-option:has(input:checked).network-option-restricted::after {
+  color: #fff;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

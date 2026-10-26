@@ -4,7 +4,7 @@ const path = require("path");
 const express = require("express");
 const fetch = require("node-fetch");
 
-const { resolveNamespace } = require("./fabricConnect");
+const { resolveNamespace, resolveNetworkKey, DEFAULT_NETWORK } = require("./fabricConnect");
 const mockResolver = require("./mockResolver");
 
 const PORT = process.env.PORT || 3000;
@@ -25,6 +25,7 @@ app.get("/api/config", (_req, res) => {
   res.json({
     defaultPeerEndpoint: DEFAULT_PEER_ENDPOINT,
     allowClientPeerOverride: ALLOW_CLIENT_PEER_OVERRIDE,
+    defaultNetwork: DEFAULT_NETWORK,
   });
 });
 
@@ -49,6 +50,11 @@ app.get("/api/resolve", async (req, res) => {
       .json({ error: "The namespace could not be extracted from the DID" });
   }
 
+  const networkKey = resolveNetworkKey(req.query.network);
+  if (!networkKey) {
+    return res.status(400).json({ error: "Invalid network. Use 'test' or 'prod'." });
+  }
+
   let peerEndpoint = DEFAULT_PEER_ENDPOINT;
   const requestedPeer = req.query.peer;
   if (requestedPeer !== undefined && requestedPeer !== "") {
@@ -66,7 +72,7 @@ app.get("/api/resolve", async (req, res) => {
   }
 
   try {
-    const chaincodeResult = await resolveNamespace(namespace, { peerEndpoint });
+    const chaincodeResult = await resolveNamespace(namespace, { peerEndpoint, network: networkKey });
     const resolverEndpoint = chaincodeResult.resolverEndpoint;
 
     let didRecord;
@@ -108,6 +114,7 @@ app.get("/api/resolve", async (req, res) => {
     res.json({
       inputDid: did,
       extractedNamespace: namespace,
+      networkUsed: networkKey,
       peerEndpointUsed: peerEndpoint,
       chaincodeResult,
       resolverEndpointCalled: resolverEndpoint,
